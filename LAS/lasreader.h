@@ -41,8 +41,8 @@ public:
 private:
     Point* mPointData = nullptr;
 
-    std::chrono::_V2::high_resolution_clock::time_point start;
-    std::chrono::_V2::high_resolution_clock::time_point end;
+    std::chrono::high_resolution_clock::time_point start;
+    std::chrono::high_resolution_clock::time_point end;
 
 
     char ushortbuffer[2];
