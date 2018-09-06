@@ -6,7 +6,7 @@
 #include <fstream>
 #include <iostream>
 #include <chrono>
-#include "lasdefinitions.h"
+#include "LAS/headerstock.h"
 #include "vec3.h"
 
 using namespace std;
@@ -37,8 +37,14 @@ public:
     Point* point();
 
     unsigned long long mNumPoints{0};
-    PUBLIC_HEADER_BLOCK mHeader;
+    HeaderStock mHeader;
 private:
+    template<typename T>
+    std::istream &binaryRead(std::istream &stream, T &value);
+
+    template<typename T>
+    void binaryConvert(char* buffer, T &value);
+
     Point* mPointData = nullptr;
 
     std::chrono::high_resolution_clock::time_point start;
@@ -49,5 +55,17 @@ private:
     char ulongbuffer[4];
     char ulonglongbuffer[8];
 };
+
+template<typename T>
+std::istream &LASReader::binaryRead(std::istream &stream, T &value)
+{
+    return stream.read(reinterpret_cast<char*>(&value), sizeof(T));
+}
+
+template<typename T>
+void LASReader::binaryConvert(char* buffer, T &value)
+{
+    memcpy(reinterpret_cast<char*>(&value), buffer, sizeof(T));
+}
 
 #endif // LASREADER_H

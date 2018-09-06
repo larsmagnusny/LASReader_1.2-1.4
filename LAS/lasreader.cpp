@@ -1,5 +1,4 @@
 #include "lasreader.h"
-#include "byteconverter.h"
 #include "constants.h"
 #include "gltypes.h"
 #include <limits>
@@ -11,184 +10,58 @@ LASReader::LASReader(string filename)
 
     start = std::chrono::high_resolution_clock::now();
 
-    char fileSignature[4];
-    char versionMajor;
-    char versionMinor;
-    char systemIdentifier[32];
-    char generatingSoftware[32];
-    char pointDataRecordFormat;
-    char legacyNumberOfPointsByReturn[20];
-    char numberOfPointsByReturn[120];
-
     if(s.is_open())
     {
-        // read the File Signature
-        s.read(&fileSignature[0], 4);
+        binaryRead(s, mHeader.fileSignature);
+        binaryRead(s, mHeader.fileSourceId);
+        binaryRead(s, mHeader.globalEncoding);
+        binaryRead(s, mHeader.projectID_GUID_data1);
+        binaryRead(s, mHeader.projectID_GUID_data2);
+        binaryRead(s, mHeader.projectID_GUID_data3);
+        binaryRead(s, mHeader.projectID_GUID_data4);
+        binaryRead(s, mHeader.versionMajor);
+        binaryRead(s, mHeader.versionMinor);
+        binaryRead(s, mHeader.systemIdentifier);
+        binaryRead(s, mHeader.generatingSoftware);
+        binaryRead(s, mHeader.fileCreationDayOfYear);
+        binaryRead(s, mHeader.fileCreationYear);
+        binaryRead(s, mHeader.headerSize);
+        binaryRead(s, mHeader.offsetToPointData);
+        binaryRead(s, mHeader.numberOfExtendedVariableLengthRecords);
+        binaryRead(s, mHeader.pointDataRecordFormat);
+        binaryRead(s, mHeader.pointDataRecordLength);
+        binaryRead(s, mHeader.legacyNumberOfPointRecords);
+        binaryRead(s, mHeader.legacyNumberOfPointsByReturn);
+        binaryRead(s, mHeader.xScaleFactor);
+        binaryRead(s, mHeader.yScaleFactor);
+        binaryRead(s, mHeader.zScaleFactor);
+        binaryRead(s, mHeader.xOffset);
+        binaryRead(s, mHeader.yOffset);
+        binaryRead(s, mHeader.zOffset);
+        binaryRead(s, mHeader.maxX);
+        binaryRead(s, mHeader.minX);
+        binaryRead(s, mHeader.maxY);
+        binaryRead(s, mHeader.minY);
+        binaryRead(s, mHeader.maxZ);
+        binaryRead(s, mHeader.minZ);
 
-        memcpy(mHeader.fileSignature, fileSignature, 4*sizeof(char));
-
-        // read the File Source ID
-        s.read(&ushortbuffer[0], 2);
-        ByteConverter::bytesToUnsignedShort(ushortbuffer, &mHeader.fileSourceId);
-
-        // read the Global Encoding
-        s.read(&ushortbuffer[0], 2);
-        ByteConverter::bytesToUnsignedShort(ushortbuffer, &mHeader.globalEncoding);
-
-        // read the Project ID GUID Data1
-        s.read(&ulongbuffer[0], 4);
-        ByteConverter::bytesToUnsignedLong(ulongbuffer, &mHeader.projectID_GUID_data1);
-
-        // read the Project ID GUID Data2
-        s.read(&ushortbuffer[0], 2);
-        ByteConverter::bytesToUnsignedShort(ushortbuffer, &mHeader.projectID_GUID_data2);
-
-        // read the Project ID GUID Data3
-        s.read(&ushortbuffer[0], 2);
-        ByteConverter::bytesToUnsignedShort(ushortbuffer, &mHeader.projectID_GUID_data3);
-
-        // read the Project ID GUID Data4
-        s.read(&ulonglongbuffer[0], 8);
-
-        memcpy(&mHeader.projectID_GUID_data4, &ulonglongbuffer, 8);
-
-        s.read(&versionMajor, 1);
-        mHeader.versionMajor = versionMajor;
-
-        s.read(&versionMinor, 1);
-        mHeader.versionMinor = versionMinor;
-
-        // read System Identifier
-        s.read(&systemIdentifier[0], 32);
-        memcpy(&mHeader.systemIdentifier, &systemIdentifier, 32);
-
-        // read Generating Software
-        s.read(&generatingSoftware[0], 32);
-
-        memcpy(&mHeader.generatingSoftware, &generatingSoftware, 32);
-
-        // Read File Creation Day Of Year
-        s.read(&ushortbuffer[0], 2);
-        ByteConverter::bytesToUnsignedShort(ushortbuffer, &mHeader.fileCreationDayOfYear);
-
-        // Read File Creation Year
-        s.read(&ushortbuffer[0], 2);
-        ByteConverter::bytesToUnsignedShort(ushortbuffer, &mHeader.fileCreationYear);
-
-        // Read Header Size
-        s.read(&ushortbuffer[0], 2);
-        ByteConverter::bytesToUnsignedShort(ushortbuffer, &mHeader.headerSize);
-
-        // Read Offset To Point Data
-        s.read(&ulongbuffer[0], 4);
-        ByteConverter::bytesToUnsignedLong(ulongbuffer, &mHeader.offsetToPointData);
-
-        // Read Number Of Variable Length Records
-        s.read(&ulongbuffer[0], 4);
-        ByteConverter::bytesToUnsignedLong(ulongbuffer, &mHeader.numberOfVariableLengthRecords);
-
-        // Read point data record format
-        s.read(&pointDataRecordFormat, 1);
-        mHeader.pointDataRecordFormat = pointDataRecordFormat;
-
-        // Read point data record length
-        s.read(&ushortbuffer[0], 2);
-        ByteConverter::bytesToUnsignedShort(ushortbuffer, &mHeader.pointDataRecordLength);
-
-
-        // Read legacy number of point records
-        s.read(&ulongbuffer[0], 4);
-        ByteConverter::bytesToUnsignedLong(ulongbuffer, &mHeader.legacyNumberOfPointRecords);
-
-        s.read(&legacyNumberOfPointsByReturn[0], 20);
-        for(int i = 0; i < 5; i++)
-        {
-            ByteConverter::bytesToUnsignedLong(&legacyNumberOfPointsByReturn[i*4], &mHeader.legacyNumberOfPointsByReturn[i]);
-        }
-
-        // read xScaleFactor
-        s.read(&ulonglongbuffer[0], 8);
-        ByteConverter::bytesToDouble(ulonglongbuffer, &mHeader.xScaleFactor);
-
-        // read yScaleFactor
-        s.read(&ulonglongbuffer[0], 8);
-        ByteConverter::bytesToDouble(ulonglongbuffer, &mHeader.yScaleFactor);
-
-        // read zScaleFactor
-        s.read(&ulonglongbuffer[0], 8);
-        ByteConverter::bytesToDouble(ulonglongbuffer, &mHeader.zScaleFactor);
-
-        // read X Offset
-        s.read(&ulonglongbuffer[0], 8);
-        ByteConverter::bytesToDouble(ulonglongbuffer, &mHeader.xOffset);
-
-        // read Y Offset
-        s.read(&ulonglongbuffer[0], 8);
-        ByteConverter::bytesToDouble(ulonglongbuffer, &mHeader.yOffset);
-
-        // read z Offset
-        s.read(&ulonglongbuffer[0], 8);
-        ByteConverter::bytesToDouble(ulonglongbuffer, &mHeader.zOffset);
-
-        // read MaxX Offset
-        s.read(&ulonglongbuffer[0], 8);
-        ByteConverter::bytesToDouble(ulonglongbuffer, &mHeader.maxX);
-
-        // read minX Offset
-        s.read(&ulonglongbuffer[0], 8);
-        ByteConverter::bytesToDouble(ulonglongbuffer, &mHeader.minX);
-
-        // read maxY Offset
-        s.read(&ulonglongbuffer[0], 8);
-        ByteConverter::bytesToDouble(ulonglongbuffer, &mHeader.maxY);
-
-        // read minY Offset
-        s.read(&ulonglongbuffer[0], 8);
-        ByteConverter::bytesToDouble(ulonglongbuffer, &mHeader.minY);
-
-        // read maxZ Offset
-        s.read(&ulonglongbuffer[0], 8);
-        ByteConverter::bytesToDouble(ulonglongbuffer, &mHeader.maxZ);
-
-        // read minZ Offset
-        s.read(&ulonglongbuffer[0], 8);
-        ByteConverter::bytesToDouble(ulonglongbuffer, &mHeader.minZ);
-
-        // IF THE VERSION IS 1.4, theese can be read:
+        // IF THE VERSION IS 1.3, theese can be read:
         if(mHeader.versionMajor == 1 && mHeader.versionMinor == 3)
         {
-            // Read start of waveform data packet record
-            s.read(&ulonglongbuffer[0], 8);
-            ByteConverter::bytesToUnsignedLongLong(ulonglongbuffer, &mHeader.startOfWaveformDataPacketRecord);
-
+            binaryRead(s, mHeader.startOfWaveformDataPacketRecord);
+            // IF THE VERSION IS 1.4, theese can be read:
             if(mHeader.versionMinor == 4)
             {
-                // Read start of first extended variable length record
-                s.read(&ulonglongbuffer[0], 8);
-                ByteConverter::bytesToUnsignedLongLong(ulonglongbuffer, &mHeader.startOfFirstExtendedVariableLengthRecord);
-
-                // Read number of extended variable length records
-                s.read(&ulongbuffer[0], 4);
-                ByteConverter::bytesToUnsignedLong(ulongbuffer, &mHeader.numberOfExtendedVariableLengthRecords);
-
-                // read number of point records
-                s.read(&ulonglongbuffer[0], 8);
-                ByteConverter::bytesToUnsignedLongLong(ulonglongbuffer, &mHeader.numberOfPointRecords);
-
-                // read number of points by return
-                s.read(&numberOfPointsByReturn[0], 120);
-
-                for(int i = 0; i < 15; i++)
-                {
-                    ByteConverter::bytesToUnsignedLongLong(&numberOfPointsByReturn[i*8], &mHeader.numberOfPointsByReturn[i]);
-                }
+                binaryRead(s, mHeader.startOfFirstExtendedVariableLengthRecord);
+                binaryRead(s, mHeader.numberOfExtendedVariableLengthRecords);
+                binaryRead(s, mHeader.numberOfPointRecords);
+                binaryRead(s, mHeader.numberOfPointsByReturn);
             }
         }
 
         cout << "Done reading header..." << endl;
 
-        // Try to read all the point data records
-        s.seekg(mHeader.offsetToPointData);
+
 
         readPointDataFormat(s);
 
@@ -223,13 +96,15 @@ void LASReader::readPointDataFormat(ifstream &s)
 
     mPointData = new Point[numberOfRecords];
 
-
     int recordsToRead = 10000;
     long long recordsLeft = static_cast<long long>(numberOfRecords);
     long long recordsRead = 0;
     long long totalPointsRead = 0;
 
     char* data = new char[recordsToRead * mHeader.pointDataRecordLength];
+
+    // Try to read all the point data records
+    s.seekg(mHeader.offsetToPointData);
 
     while(recordsLeft > 0)
     {
@@ -248,14 +123,9 @@ void LASReader::readPointDataFormat(ifstream &s)
 
         for(long long i = 0; i < recordsRead; i++)
         {
-            memcpy(ulongbuffer, &data[i * mHeader.pointDataRecordLength], 4);
-            ByteConverter::bytesToLong(ulongbuffer, &mPointData[totalPointsRead + i].X);
-
-            memcpy(ulongbuffer, &data[i * mHeader.pointDataRecordLength + 4], 4);
-            ByteConverter::bytesToLong(ulongbuffer, &mPointData[totalPointsRead + i].Y);
-
-            memcpy(ulongbuffer, &data[i * mHeader.pointDataRecordLength + 8], 4);
-            ByteConverter::bytesToLong(ulongbuffer, &mPointData[totalPointsRead + i].Z);
+            binaryConvert(&data[i * mHeader.pointDataRecordLength], mPointData[totalPointsRead + i].X);
+            binaryConvert(&data[i * mHeader.pointDataRecordLength + 4], mPointData[totalPointsRead + i].Y);
+            binaryConvert(&data[i * mHeader.pointDataRecordLength + 8], mPointData[totalPointsRead + i].Z);
         }
 
         totalPointsRead += recordsRead;

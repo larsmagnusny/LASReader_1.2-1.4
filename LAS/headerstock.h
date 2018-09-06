@@ -1,7 +1,7 @@
-#ifndef LASDEFINITIONS_H
-#define LASDEFINITIONS_H
+#ifndef HEADERSTOCK_H
+#define HEADERSTOCK_H
 
-struct PUBLIC_HEADER_BLOCK
+struct HeaderStock
 {
     char fileSignature[4];
     unsigned short fileSourceId;
@@ -35,11 +35,15 @@ struct PUBLIC_HEADER_BLOCK
     double minY;
     double maxZ;
     double minZ;
+
+    // v.1.3 header extension
     unsigned long long startOfWaveformDataPacketRecord;
+
+    // v.1.4 header extensions
     unsigned long long startOfFirstExtendedVariableLengthRecord;
     unsigned long numberOfExtendedVariableLengthRecords;
     unsigned long long numberOfPointRecords;
     unsigned long long numberOfPointsByReturn[15];
 };
 
-#endif // LASDEFINITIONS_H
+#endif // HEADERSTOCK_H
