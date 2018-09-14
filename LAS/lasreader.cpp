@@ -60,9 +60,7 @@ LASReader::LASReader(string filename)
         }
 
         cout << "Done reading header..." << endl;
-
-
-
+		
         readPointDataFormat(s);
 
         s.close();
@@ -87,17 +85,15 @@ void LASReader::readPointDataFormat(ifstream &s)
 
     long currentPoint[3];
 
-    unsigned long long numberOfRecords = using14 ? mHeader.numberOfPointRecords : mHeader.legacyNumberOfPointRecords;
-
-    mNumPoints = numberOfRecords;
+    mNumPoints = using14 ? mHeader.numberOfPointRecords : mHeader.legacyNumberOfPointRecords;
 
     if(mPointData)
         delete[] mPointData;
 
-    mPointData = new Point[numberOfRecords];
+    mPointData = new Point[mNumPoints];
 
     int recordsToRead = 10000;
-    long long recordsLeft = static_cast<long long>(numberOfRecords);
+    long long recordsLeft = static_cast<long long>(mNumPoints);
     long long recordsRead = 0;
     long long totalPointsRead = 0;
 
